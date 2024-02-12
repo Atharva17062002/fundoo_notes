@@ -8,8 +8,11 @@ from app.utils import send_mail
 import jwt
 
 app = create_app()
-api = Api(app=app, version='1.0', title='User API', description='A simple User API', prefix = '/api/v1')
-
+api = Api(app=app, 
+        version='1.0', 
+        title='User API', 
+        description='A simple User API', 
+        prefix = '/api/v1')
 
 
 @api.route('/user', '/user/<int:id>')
@@ -25,8 +28,8 @@ class UserAPI(Resource):
         send_mail(user.username,user.email,token)
         db.session.refresh(user)
         db.session.close()
-        return jsonify({"message": "User registered successfully","status":201,"data":user.to_json}), 201
-        
+        return {"message": "User registered successfully","status":201,"data":user.to_json}, 201
+
     def delete(self, id):
         user = User.query.filter_by(id=id).first()
         if user:
@@ -45,6 +48,3 @@ class LoginAPI(Resource):
         if user and user.verify_password(data['password']):
             return jsonify({"message": "Login successful"})
         return jsonify({"message": "Invalid credentials"})
-
-# api.add_resource('/register', UserAPI)
-# api.add_resource('/delete/<int:id>', UserAPI)

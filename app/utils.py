@@ -4,6 +4,7 @@ from flask_mail import Message
 from settings import settings
 import jwt
 import json
+from . import mail
 
 def api_handler(body = None, query = None):
     def custom_validator(function):
@@ -40,7 +41,7 @@ class JWT:
         return decoded
 
     
-def send_mail(user,mail,token):
+def send_mail(user,email,token):
     msg= Message("Welcome to Fundoo Notes! Verify Your Email to Get Started", sender = f"{settings.sender}", recipients=[email])
 
     msg.body = f'''
@@ -49,7 +50,7 @@ Dear {user},
 
 Welcome to Fundoo_Notes! We're thrilled to have you as part of our community. To get started, please verify your email address by entering the following verification token within the website:
 
-Verification Link: {f'{settings.base_url}/verify?token={token}'}
+Verification Link: {f'{settings.base_uri}/verify?token={token}'}
 
 This verification step ensures the security of your account and helps us keep our community safe. If you didn't create an account with Fundoo_Notes, please ignore this email.
 

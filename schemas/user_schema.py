@@ -4,7 +4,7 @@ import re
 
 class UserSchema(BaseModel):
     username: str = Field(min_length=3, max_length=100, pattern="^[a-zA-Z0-9_-]+$")
-    email: str = Field(min_length=3, max_length=100, pattern="^[a-z0-9+-]+(\.)?@[a-z0-9]+\.[a-z]{2,}(\.[a-z]+)?$")
+    email: str = Field(min_length=3, max_length=100, pattern="^[a-z0-9+-\.]+(\.)?@[a-z0-9]+\.[a-z]{2,}(\.[a-z]+)?$")
     password: str = Field(min_length=8, max_length=10)
     location: Optional[str] = None
 
