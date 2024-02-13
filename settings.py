@@ -9,5 +9,7 @@ class Settings(BaseSettings):
     database_uri: str
     mail_port: int
     base_uri: str
+    jwt_key: str
+    jwt_algo: str
 
 settings = Settings()

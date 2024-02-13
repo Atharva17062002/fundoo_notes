@@ -50,7 +50,7 @@ Dear {user},
 
 Welcome to Fundoo_Notes! We're thrilled to have you as part of our community. To get started, please verify your email address by entering the following verification token within the website:
 
-Verification Link: {f'{settings.base_uri}/verify?token={token}'}
+Verification Link: {f'{settings.base_uri}/api/verify?token={token}'}
 
 This verification step ensures the security of your account and helps us keep our community safe. If you didn't create an account with Fundoo_Notes, please ignore this email.
 
