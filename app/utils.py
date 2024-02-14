@@ -27,12 +27,12 @@ def api_handler(body = None, query = None):
 
 class JWT:
 
-    key = 'fundoo_notes'
-    algorithm = 'HS256'
+    key = settings.jwt_key
+    algorithm = settings.jwt_algo
 
     @classmethod
-    def to_encode(cls,user_dict):
-        encoded = jwt.encode(user_dict,cls.key,algorithm= cls.algorithm)
+    def to_encode(cls,payload):
+        encoded = jwt.encode(payload,cls.key,algorithm= cls.algorithm)
         return encoded
     
     @classmethod

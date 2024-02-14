@@ -1,5 +1,8 @@
 from app import db
 from passlib.hash import pbkdf2_sha256
+from settings import settings
+from datetime import datetime, timedelta
+from .utils import JWT
 
 class BaseModel(db.Model):
     __abstract__ = True
@@ -23,6 +26,10 @@ class User(BaseModel):
 
     def verify_password(self, raw_password):
         return pbkdf2_sha256.verify(raw_password, self.password)
+
+    def generate_token(self, aud = "Default", exp = 15):
+        payload = {"user_id":self.id, "aud":aud, "exp":datetime.utcnow() + timedelta(minutes=exp)}
+        return JWT.to_encode(payload)
 
     @property
     def to_json(self):
