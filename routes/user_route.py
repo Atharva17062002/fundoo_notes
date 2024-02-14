@@ -61,3 +61,5 @@ class LoginAPI(Resource):
         if user and user.verify_password(data['password']):
             return jsonify({"message": "Login successful"})
         return jsonify({"message": "Invalid credentials"})
+
+
