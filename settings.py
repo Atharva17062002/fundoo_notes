@@ -11,5 +11,8 @@ class Settings(BaseSettings):
     base_uri: str
     jwt_key: str
     jwt_algo: str
+    redis_port: int 
+    redis_host: str
+    redis_db: int
 
 settings = Settings()

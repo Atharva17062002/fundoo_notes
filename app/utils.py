@@ -5,6 +5,7 @@ from settings import settings
 import jwt
 import json
 from . import mail
+import redis
 
 def api_handler(body = None, query = None):
     def custom_validator(function):
@@ -59,4 +60,21 @@ Thank you for choosing Fundoo_Notes! If you have any questions or need assistanc
 Best regards,
 Fundoo_Notes Team'''
     mail.send(msg)
+
+class RedisManager:
+    redis_client = redis.StrictRedis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
+    
+    @classmethod
+    def save(cls, key, field, value):
+        cls.redis_client.hset(key, field, value)
+
+    @classmethod
+    def get(cls,key):
+        return cls.redis_client.hgetall(key)
+
+    @classmethod
+    def delete(cls,key,field):
+        cls.redis_client.hdel(key, field)
+
+
 
