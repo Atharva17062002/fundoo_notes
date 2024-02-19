@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_mail import Mail
 from settings import settings
+from celery import Celery, Task
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -21,6 +22,14 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
+    app.config.from_mapping(
+        CELERY=dict(
+            broker_url="redis://localhost",
+            result_backend="redis://localhost",
+            task_ignore_result=True,
+            broker_connection_retry_on_startup=True
+        ),
+    )
 
     return app
 

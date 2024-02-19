@@ -4,9 +4,10 @@ from app.models import User
 from schemas.user_schema import UserSchema
 from app.utils import api_handler
 from flask_restx import Api, Resource
-from app.utils import send_mail
+# from app.utils import send_mail
 import jwt
 from settings import settings
+from app.tasks import celery_send_email
 
 app = create_app()
 api = Api(app=app, 
@@ -26,7 +27,8 @@ class UserAPI(Resource):
         db.session.add(user)
         db.session.commit()
         token = jwt.encode({"user_id": user.id}, settings.jwt_key, algorithm=settings.jwt_algo)
-        send_mail(user.username,user.email,token)
+        # send_mail(user.username,user.email,token)
+        celery_send_email.delay(user.username,user.email,token)
         db.session.refresh(user)
         db.session.close()
         return {"message": "User registered successfully","status":201,"data":user.to_json}, 201
@@ -61,5 +63,3 @@ class LoginAPI(Resource):
         if user and user.verify_password(data['password']):
             return jsonify({"message":"Login successful","token": user.generate_token(aud = "login",exp = 60)})
         return jsonify({"message": "Invalid credentials"})
-
-
