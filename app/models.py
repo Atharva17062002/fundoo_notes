@@ -17,6 +17,7 @@ class User(BaseModel):
     location = db.Column(db.String(100), nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
     notes = db.relationship('Notes',back_populates="user")
+    label = db.relationship('Label',back_populates="user")
 
     def __init__(self, username, email, password, location):
         self.username = username
@@ -67,3 +68,16 @@ class Notes(BaseModel):
             "is_trash": self.is_trash,
             "user_id": self.user_id
         }
+
+class Label(BaseModel):
+    __tablename__ = 'label'
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
+    user = db.relationship('User', back_populates="label")
+
+    def to_json(self):
+        return {
+            "name": self.name,
+            "user_id": self.user_id
+        }
+
