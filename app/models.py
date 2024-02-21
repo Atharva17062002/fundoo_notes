@@ -3,11 +3,20 @@ from passlib.hash import pbkdf2_sha256
 from settings import settings
 from datetime import datetime, timedelta
 from .utils import JWT
+from sqlalchemy.orm import Mapped
+from typing import List
 
 class BaseModel(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
+collaborators = db.Table(
+    'collaborators',
+    db.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), nullable=False),
+    db.Column('notes_id', db.Integer, db.ForeignKey('notes.id', ondelete="CASCADE"), nullable=False),
+    db.Column("access_type", db.String(10), default= 'read-only'),
+)
 
 class User(BaseModel):
     __tablename__ = 'user'
@@ -18,6 +27,7 @@ class User(BaseModel):
     is_verified = db.Column(db.Boolean, default=False)
     notes = db.relationship('Notes',back_populates="user")
     label = db.relationship('Label',back_populates="user")
+    c_notes: Mapped[List["Notes"]] = db.relationship(secondary=collaborators,back_populates="c_users")
 
     def __init__(self, username, email, password, location):
         self.username = username
@@ -53,6 +63,7 @@ class Notes(BaseModel):
     is_trash = db.Column(db.Boolean, default=False)
     user_id=db.Column(db.Integer,db.ForeignKey('user.id', ondelete="CASCADE"),nullable=False)
     user=db.relationship('User',back_populates="notes")
+    c_users: Mapped[List["User"]] = db.relationship(secondary=collaborators,back_populates='c_notes')
 
     def _str_(self) -> str:
         return f'{self.title}-{self.id}'
