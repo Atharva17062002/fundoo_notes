@@ -74,7 +74,7 @@ class Notes(BaseModel):
             "title": self.title,
             "description": self.description,
             "color": self.color,
-            "reminder": self.reminder,
+            "reminder": str(self.reminder),
             "is_archived": self.is_archived,
             "is_trash": self.is_trash,
             "user_id": self.user_id

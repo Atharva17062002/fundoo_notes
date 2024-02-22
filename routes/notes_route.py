@@ -7,6 +7,10 @@ from schemas.notes_schema import NotesSchema
 import jwt
 from app.middleware import auth_user
 import json
+from redbeat import RedBeatSchedulerEntry as Task
+from celery.schedules import crontab
+from app.tasks import c_app
+import celery
 
 
 app = create_app()
@@ -39,8 +43,25 @@ class NotesApi(Resource):
         notes = Notes(**data)
         db.session.add(notes)
         db.session.commit()
+        reminder = notes.reminder
+        if reminder:
+            date, _time = data['reminder'].split("T")
+            date = date.split("-")
+            _time = _time.split(":")
+
+            reminder_task = Task(name=f'user_{notes.user_id}-note_{notes.id}',
+                task='app.tasks.celery_send_email',
+                schedule=crontab(
+                    minute=_time[1],
+                    hour=_time[0],
+                    day_of_month=date[2],
+                    month_of_year=date[1]
+                ),
+                app = c_app,                
+                args= [notes.user.username, notes.user.email, "Hello world"])    
+            reminder_task.save() 
         RedisManager.save(f'user_{notes.user_id}', f'note_{notes.id}', json.dumps(notes.to_json()))
-        # db.session.close()
+        db.session.close()
         return {"message": "Notes added successfully","status":201,"data":notes.to_json()}, 201
 
     def delete(self, *args, **kwargs):

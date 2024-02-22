@@ -10,6 +10,7 @@ def celery_init_app(app):
 
     celery_app = Celery(app.name, task_cls=FlaskTask)
     celery_app.config_from_object(app.config["CELERY"])
+    celery_app.conf.timezone = 'Asia/Kolkata'
     celery_app.set_default()
     app.extensions["celery"] = celery_app
     return celery_app
@@ -19,6 +20,6 @@ c_app = celery_init_app(app)
 
 
 @shared_task
-def celery_send_email(username, email, token):
-    send_mail(username, email, token)
+def celery_send_email(username, email, token,title,body):
+    send_mail(username, email, token,title,body)
     return "Mail sent successfully"

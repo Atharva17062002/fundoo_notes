@@ -28,7 +28,20 @@ class UserAPI(Resource):
         db.session.commit()
         token = jwt.encode({"user_id": user.id}, settings.jwt_key, algorithm=settings.jwt_algo)
         # send_mail(user.username,user.email,token)
-        celery_send_email.delay(user.username,user.email,token)
+        celery_send_email.delay(user.username,user.email,token,"Welcome to Fundoo Notes! Verify Your Email to Get Started",f'''
+
+Dear {user},
+
+Welcome to Fundoo_Notes! We're thrilled to have you as part of our community. To get started, please verify your email address by entering the following verification token within the website:
+
+Verification Link: {f'{settings.user_uri}/api/verify?token={token}'}
+
+This verification step ensures the security of your account and helps us keep our community safe. If you didn't create an account with Fundoo_Notes, please ignore this email.
+
+Thank you for choosing Fundoo_Notes! If you have any questions or need assistance, feel free to reach out to our support team at 17.atharva@gmail.com.
+
+Best regards,
+Fundoo_Notes Team''')
         db.session.refresh(user)
         db.session.close()
         return {"message": "User registered successfully","status":201,"data":user.to_json}, 201

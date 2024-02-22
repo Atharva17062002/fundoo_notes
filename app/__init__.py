@@ -27,7 +27,12 @@ def create_app():
             broker_url="redis://localhost",
             result_backend="redis://localhost",
             task_ignore_result=True,
-            broker_connection_retry_on_startup=True
+            broker_connection_retry_on_startup=True,
+            redbeat_redis_url = "redis://localhost:6379/0",
+            redbeat_lock_key = None,
+            enable_utc=True,
+            beat_max_loop_interval=5,
+            beat_scheduler='redbeat.schedulers.RedBeatScheduler'
         ),
     )
 
