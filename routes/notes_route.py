@@ -1,7 +1,7 @@
 from app import db, create_app
 from app.models import Notes, User
 from flask import request
-from flask_restx import Api, Resource
+from flask_restx import Api, Resource, fields
 from app.utils import api_handler, RedisManager
 from schemas.notes_schema import NotesSchema
 import jwt
@@ -15,8 +15,16 @@ import celery
 
 app = create_app()
 
-api = Api(app=app, version='1.0', title='Notes API', description='Notes API')
-@api.route('/notes', '/notes/<int:id>')
+api = Api(app=app, version='1.0', title='Notes API', description='Notes API',security='apikey',authorizations={
+    'apikey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'Authorization',
+        'required': True
+    }
+},doc= '/docs')
+
+@api.route('/notes')
 class NotesApi(Resource):
 
     method_decorators = [auth_user]
@@ -37,7 +45,9 @@ class NotesApi(Resource):
         print(user.c_notes)
         return {"message": "Data retrieved successfully from database", "status":200,'data': all_notes}
 
+    @api.expect(api.model('Addnotes', {"title":fields.String(),"description": fields.String(), "color": fields.String(),"reminder":fields.String()}))
     @api_handler(body=NotesSchema)
+
     def post(self):
         data  = request.get_json()
         notes = Notes(**data)
@@ -71,7 +81,9 @@ class NotesApi(Resource):
         db.session.commit()
         return {"message": "Notes deleted successfully","status":200}, 200
 
-    api_handler()
+    @api.expect(api.model('Updatenotes', {"title":fields.String(),"description": fields.String(), 
+    "color": fields.String()}))
+    @api_handler()
     def put(self, *args, **kwargs):
         data  = request.get_json()
         note = Notes.query.filter_by(id=data['id'], user_id=data['user_id']).first()
@@ -85,10 +97,11 @@ class NotesApi(Resource):
         # db.session.close()
         return {"message": "Notes updated successfully","status":201,"data":note.to_json()}, 201
 
-@api.route('/notes/archived', '/notes/archive/<int:id>')
+@api.route('/notes/archived')
 class NoteArchived(Resource):
     method_decorators = [auth_user]
 
+    @api.expect(api.model('archiveNotes', {"id":fields.Integer()}))
     def put(self, *args, **kwargs):
         data = request.get_json()
         note = Notes.query.filter_by(id=data['id'], user_id=data['user_id']).first()
@@ -103,10 +116,11 @@ class NoteArchived(Resource):
         return {"message": "Note archived retrived successfully","status":200,"data":[note.to_json() for note in notes]}, 200
 
     
-@api.route('/notes/trash', '/notes/trash/<int:id>')
+@api.route('/notes/trash')
 class NoteTrash(Resource):
     method_decorators = [auth_user]
 
+    @api.expect(api.model('trash_notes', {"id":fields.Integer()}))
     def put(self, *args, **kwargs):
         data = request.get_json()
         note = Notes.query.filter_by(id=data['id'], user_id=data['user_id']).first()
@@ -120,11 +134,11 @@ class NoteTrash(Resource):
         notes = Notes.query.filter_by(user_id=kwargs['user_id'], is_trash = True, is_archived=False).all()
         return {"message": "Note trashed retrived successfully","status":200,"data":[note.to_json() for note in notes]}, 200
 
-@api.route('/collab', '/collab')
-
+@api.route('/collab')
 class NoteCollaborator(Resource):
     method_decorators = [auth_user]
 
+    @api.expect(api.model('collabNotes', {"id":fields.Integer(),"user_ids": fields.List(fields.Integer())}))
     def post(self):
         try:
             data = request.get_json()

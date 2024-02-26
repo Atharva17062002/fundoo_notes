@@ -6,6 +6,8 @@ import jwt
 import json
 from . import mail
 import redis
+import psycopg2
+import sqlalchemy
 
 def api_handler(body = None, query = None):
     def custom_validator(function):
@@ -16,6 +18,11 @@ def api_handler(body = None, query = None):
                 if query:
                     pass
                 return function(*args, **kwargs)
+            except sqlalchemy.exc.IntegrityError as e:
+                return {"message": "Data already exist","status": 400,"data":{}},400
+            except psycopg2.errors.UniqueViolation as e:
+                print(str(e))
+                return {"message": "Data already exist","status": 400,"data":{}},400
             except ValidationError as e:
                 return {"message": json.loads(e.json()),"status": 400,"data":{}},400
             except Exception as e:

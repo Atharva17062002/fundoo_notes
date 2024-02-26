@@ -8,7 +8,7 @@ from typing import List
 
 class BaseModel(db.Model):
     __abstract__ = True
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False,)
 
 collaborators = db.Table(
     'collaborators',
@@ -54,7 +54,6 @@ class User(BaseModel):
 
 class Notes(BaseModel):
     __tablename__ = 'notes'
-    id=db.Column(db.Integer,primary_key=True,nullable=False, autoincrement=True)
     title=db.Column(db.String(50),nullable=True)
     description=db.Column(db.Text,nullable=False)
     color = db.Column(db.String(20))

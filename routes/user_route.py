@@ -3,7 +3,7 @@ from flask import request, jsonify
 from app.models import User
 from schemas.user_schema import UserSchema
 from app.utils import api_handler
-from flask_restx import Api, Resource
+from flask_restx import Api, Resource, fields
 # from app.utils import send_mail
 import jwt
 from settings import settings
@@ -14,12 +14,14 @@ api = Api(app=app,
         version='1.0', 
         title='User API', 
         description='A simple User API', 
-        prefix = '/api/v1')
+        prefix = '/api/v1',
+        doc = '/docs')
 
 
-@api.route('/user', '/user/<int:id>', '/verify')
+@api.route('/register', '/verify')
 class UserAPI(Resource):
 
+    @api.expect(api.model('register', {'username': fields.String(), 'email': fields.String(), 'password': fields.String(),'location': fields.String()}))
     @api_handler(body=UserSchema)
     def post(self):
         data = request.get_json()
@@ -55,6 +57,7 @@ Fundoo_Notes Team''')
             return jsonify({"message": "User deleted successfully"})
         return jsonify({"message": "User not found"})
 
+    @api.doc(params = {'token': "Give token"})
     def get(self):
         token = request.args.get('token')
         if not token:
@@ -70,6 +73,7 @@ Fundoo_Notes Team''')
 @api.route('/login')
 class LoginAPI(Resource):
 
+    @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(username=data['username']).first()
