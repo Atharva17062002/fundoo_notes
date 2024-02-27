@@ -1,19 +1,19 @@
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, field_validator, ValidationError
 from typing import Optional
 import re
 
 class UserSchema(BaseModel):
     username: str = Field(min_length=3, max_length=100, pattern="^[a-zA-Z0-9_-]+$")
-    email: str = Field(min_length=3, max_length=100, pattern="^[a-z0-9+-\.]+(\.)?@[a-z0-9]+\.[a-z]{2,}(\.[a-z]+)?$")
+    email: str = Field(min_length=3, max_length=100, pattern="^[a-z0-9+-\\.]+(\\.)?@[a-z0-9]+\\.[a-z]{2,}(\\.[a-z]+)?$")
     password: str = Field(min_length=8, max_length=10)
     location: Optional[str] = None
 
-    @validator('email')
+    @field_validator('email')
     def email_must_be_valid(cls, email):
         assert '@' in email, 'Invalid email'
         return email
 
-    @validator('password')
+    @field_validator('password')
     def password_must_contain_special_characters(cls, password):
         # regex = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$')
         if not re.match('^[A-Za-z0-9]{8,}$', password):

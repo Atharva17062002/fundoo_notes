@@ -78,5 +78,5 @@ class LoginAPI(Resource):
         data = request.get_json()
         user = User.query.filter_by(username=data['username']).first()
         if user and user.verify_password(data['password']):
-            return jsonify({"message":"Login successful","token": user.generate_token(aud = "login",exp = 60)})
-        return jsonify({"message": "Invalid credentials"})
+            return {"message":"Login successful","token": user.generate_token(aud = "login",exp = 60),"status": 200}, 200
+        return {"message": "Invalid credentials", "status": 401}, 401

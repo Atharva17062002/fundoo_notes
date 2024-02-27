@@ -7,6 +7,7 @@ from schemas.notes_schema import NotesSchema
 import jwt
 from app.middleware import auth_user
 import json
+from sqlalchemy import text
 
 app = create_app()
 
@@ -26,37 +27,47 @@ class LabelsApi(Resource):
 
     @api_handler()
     def get(self, *args, **kwargs):
-        labels = Label.query.filter_by(**kwargs).all()
-        return {"message": "Data retrieved successfully from database", "status":200,'data': [label.to_json() for label in labels]}, 200
+        
+        labels = db.session.execute(
+            text(
+                f"SELECT * FROM label WHERE user_id = {kwargs['user_id']}"
+            )
+        )
+        labels = list(map(dict,labels.mappings().all()))
+        return {"message": "Data retrieved successfully from database", "status":200,'data':labels}, 200
+    
 
     @api.expect(api.model('createLabel', {"name":fields.String()}))
     @api_handler()
     def post(self,*args, **kwargs):
         data = request.get_json()
         label = Label(**data)
-        db.session.add(label)
+        db.session.execute(text(f"INSERT INTO label (name, user_id) VALUES ('{label.name}',{label.user_id})"))
         db.session.commit()
         return {"message": "Label created successfully","status":201,"data":label.to_json()}, 201
 
-    @api_handler
     @api.doc(params={'label_id': "Label Id"})
+    @api_handler()
     def delete(self, *args, **kwargs):
-        label = Label.query.filter_by(id=request.args.get('label_id'), **kwargs).first()
-        if label:
-            db.session.delete(label)
+        label_id = request.args.get('label_id')
+        label = db.session.execute(text(f"SELECT * FROM label WHERE id = {label_id} and user_id = {kwargs['user_id']}"))
+        if label.fetchone():
+            db.session.execute(text(f"DELETE FROM label WHERE id = {label_id} and user_id = {kwargs['user_id']}"))
             db.session.commit()
             db.session.close()
             return {"message": "Label deleted successfully","status":200}, 200
         return {"message": "Label not found", "status":404}, 404
 
-
+    @api.expect(api.model('updateLabel', {"id": fields.Integer(), "name": fields.String(),"user_id": fields.Integer()}))
     @api_handler()
-    @api.expect(api.model('updateLabel', {"id": fields.Integer(), "name": fields.String()}))
     def put(self, *args, **kwargs):
         data = request.get_json()
-        label = Label.query.filter_by(id=data['id']).first()
-        [setattr(label, key, value) for key, value in data.items()]
+        label = db.session.execute(text(f"UPDATE label SET name = '{data['name']}' WHERE id = {data['id']} and user_id = {data['user_id']}"))
         db.session.commit()
-        return {"message": "Label updated successfully","status":201,"data":label.to_json()}, 201
+
+        label = db.session.execute(text(f"SELECT * FROM label WHERE id = {data['id']} and user_id = {data['user_id']}"))
+        label = dict(label.mappings().fetchone())
+        
+        return {"message": "Label updated successfully","status":201,"data":label}, 201
 
    
