@@ -87,6 +87,7 @@ class Label(BaseModel):
 
     def to_json(self):
         return {
+            "id" :self.id,
             "name": self.name,
             "user_id": self.user_id
         }

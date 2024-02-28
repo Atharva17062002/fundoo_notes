@@ -46,7 +46,7 @@ Best regards,
 Fundoo_Notes Team''')
         db.session.refresh(user)
         db.session.close()
-        return {"message": "User registered successfully","status":201,"data":user.to_json}, 201
+        return {"message": "User registered successfully","status":201,"data":user.to_json,'token': token}, 201
 
     def delete(self, id):
         user = User.query.filter_by(id=id).first()

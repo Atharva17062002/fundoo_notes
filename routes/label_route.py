@@ -18,7 +18,7 @@ api = Api(app=app, version='1.0', title='Labels API', description='Notes API',se
         'name': 'Authorization',
         'required': True
     }
-},doc= '/docs')
+},doc= '/docs', prefix= '/api/v1')
 
 @api.route('/labels')
 

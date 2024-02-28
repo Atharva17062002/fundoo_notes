@@ -22,7 +22,7 @@ api = Api(app=app, version='1.0', title='Notes API', description='Notes API',sec
         'name': 'Authorization',
         'required': True
     }
-},doc= '/docs')
+},doc= '/docs',prefix='/api/v1')
 
 @api.route('/notes')
 class NotesApi(Resource):
@@ -47,7 +47,6 @@ class NotesApi(Resource):
 
     @api.expect(api.model('Addnotes', {"title":fields.String(),"description": fields.String(), "color": fields.String(),"reminder":fields.String()}))
     @api_handler(body=NotesSchema)
-
     def post(self):
         data  = request.get_json()
         notes = Notes(**data)
@@ -74,14 +73,18 @@ class NotesApi(Resource):
         db.session.close()
         return {"message": "Notes added successfully","status":201,"data":notes.to_json()}, 201
 
+    @api.doc(params={'note_id': "Note id"})
     def delete(self, *args, **kwargs):
-        notes = Notes.query.filter_by(**kwargs).first()
+        note_id = request.args.get('note_id')
+        if not note_id:
+            return {"message": "Please provide note id", "status":400, "data":{}}, 400
+        notes = Notes.query.filter_by(id=int(note_id), **kwargs).first()
         RedisManager.delete(f'user_{notes.user_id}', f'note_{notes.id}')
         db.session.delete(notes)
         db.session.commit()
         return {"message": "Notes deleted successfully","status":200}, 200
 
-    @api.expect(api.model('Updatenotes', {"title":fields.String(),"description": fields.String(), 
+    @api.expect(api.model('Updatenotes', {"id": fields.Integer(), "title":fields.String(),"description": fields.String(), 
     "color": fields.String()}))
     @api_handler()
     def put(self, *args, **kwargs):
@@ -89,13 +92,8 @@ class NotesApi(Resource):
         note = Notes.query.filter_by(id=data['id'], user_id=data['user_id']).first()
         [setattr(note, key, value) for key, value in data.items()]
         RedisManager.save(f'user_{note.user_id}', f'note_{note.id}',json.dumps(note.to_json()))
-        # notes.title = data['title']
-        # notes.description = data['description']
-        # notes.color = data['color']
-        # notes.reminder = data['reminder']
         db.session.commit()
-        # db.session.close()
-        return {"message": "Notes updated successfully","status":201,"data":note.to_json()}, 201
+        return {"message": "Notes updated successfully","status":200,"data":note.to_json()}, 200
 
 @api.route('/notes/archived')
 class NoteArchived(Resource):
@@ -134,7 +132,7 @@ class NoteTrash(Resource):
         notes = Notes.query.filter_by(user_id=kwargs['user_id'], is_trash = True, is_archived=False).all()
         return {"message": "Note trashed retrived successfully","status":200,"data":[note.to_json() for note in notes]}, 200
 
-@api.route('/collab')
+@api.route('/notes/collab')
 class NoteCollaborator(Resource):
     method_decorators = [auth_user]
 
