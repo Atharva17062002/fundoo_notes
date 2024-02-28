@@ -10,19 +10,52 @@ migrate = Migrate()
 mail = Mail()
 
 class Development:
-    """Development environment configuration."""
+    """
+    Development environment configuration.
+
+    Description:
+    Configuration settings for the development environment.
+
+    Parameters:
+    None
+
+    Return:
+    None
+    """
     SQLALCHEMY_DATABASE_URI = settings.database_uri
     DEBUG = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 class Testing:
-    """Testing environment configuration."""
+    """
+    Testing environment configuration.
+
+    Description:
+    Configuration settings for the testing environment.
+
+    Parameters:
+    None
+
+    Return:
+    None
+    """
     SQLALCHEMY_DATABASE_URI = "sqlite:///test.sqlite3"
     TESTING = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 class Production:
-    """Production environment configuration."""
+    """
+    Production environment configuration.
+
+    Description:
+    Configuration settings for the production environment.
+
+    Parameters:
+    None
+
+    Return:
+    None
+    """
     SQLALCHEMY_DATABASE_URI = settings.database_uri
     DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = True
@@ -34,7 +67,18 @@ config_mode = {
 }
 
 def create_app(mode='debug'):
-    """Create and configure the Flask app."""
+    """
+    Create and configure the Flask app.
+
+    Description:
+    This function creates a Flask application instance and configures it based on the specified mode.
+
+    Parameters:
+    mode (str): The mode in which the application should run (default is 'debug').
+
+    Return:
+    app (Flask): The configured Flask application instance.
+    """
     app = Flask(__name__)
     app.config.from_object(config_mode[mode])
 
@@ -67,4 +111,3 @@ def create_app(mode='debug'):
     )
 
     return app
-

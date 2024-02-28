@@ -33,7 +33,18 @@ class LabelsApi(Resource):
 
     @api_handler()
     def get(self, *args, **kwargs):
-        """Retrieve all labels for the authenticated user."""
+        """Retrieve all labels for the authenticated user.
+
+        Description:
+        This endpoint retrieves all labels associated with the authenticated user.
+
+        Parameter:
+        kwargs (dict): Keyword arguments containing user ID.
+
+        Return:
+        dict: A dictionary containing the retrieved labels with an HTTP status code.
+        """
+
         labels = db.session.execute(
             text(
                 f"SELECT * FROM label WHERE user_id = {kwargs['user_id']}"
@@ -45,7 +56,18 @@ class LabelsApi(Resource):
     @api.expect(api.model('createLabel', {"name": fields.String()}))
     @api_handler()
     def post(self, *args, **kwargs):
-        """Create a new label."""
+        """Create a new label.
+
+        Description:
+        This endpoint creates a new label for the authenticated user.
+
+        Parameter:
+        None
+
+        Return:
+        dict: A dictionary containing a success message, the created label data, and an HTTP status code.
+        """
+
         data = request.get_json()
         label = Label(**data)
         db.session.execute(
@@ -56,7 +78,18 @@ class LabelsApi(Resource):
     @api.doc(params={'label_id': "Label Id"})
     @api_handler()
     def delete(self, *args, **kwargs):
-        """Delete a label."""
+        """Delete a label.
+
+        Description:
+        This endpoint deletes a label associated with the authenticated user based on the provided label ID.
+
+        Parameter:
+        kwargs (dict): Keyword arguments containing user ID.
+
+        Return:
+        dict: A dictionary containing a success message or a label not found message with an HTTP status code.
+        """
+
         label_id = request.args.get('label_id')
         label = db.session.execute(
             text(f"SELECT * FROM label WHERE id = {label_id} and user_id = {kwargs['user_id']}"))
@@ -71,7 +104,18 @@ class LabelsApi(Resource):
     @api.expect(api.model('updateLabel', {"id": fields.Integer(), "name": fields.String(), "user_id": fields.Integer()}))
     @api_handler()
     def put(self, *args, **kwargs):
-        """Update a label."""
+        """Update a label.
+
+        Description:
+        This endpoint updates a label associated with the authenticated user based on the provided label ID.
+
+        Parameter:
+        kwargs (dict): Keyword arguments containing user ID.
+
+        Return:
+        dict: A dictionary containing a success message, updated label data, and an HTTP status code.
+        """
+
         data = request.get_json()
         label = db.session.execute(
             text(f"UPDATE label SET name = '{data['name']}' WHERE id = {data['id']} and user_id = {data['user_id']}"))

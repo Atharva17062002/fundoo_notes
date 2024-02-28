@@ -20,11 +20,22 @@ api = Api(app=app,
 @api.route('/register', '/verify')
 class UserAPI(Resource):
     """Resource for user registration and verification."""
-
+    
     @api.expect(api.model('register', {'username': fields.String(), 'email': fields.String(), 'password': fields.String(), 'location': fields.String()}))
     @api_handler(body=UserSchema)
     def post(self):
-        """Register a new user."""
+        """Register a new user.
+        
+        Description:
+        This endpoint registers a new user by creating a User object with provided data, adding it to the database, and sending a verification email.
+
+        Parameter:
+        None
+        
+        Return:
+        dict: A dictionary containing a success message, user data, and verification token with HTTP status code 201.
+        """
+
         data = request.get_json()
         user = User(**data)
         db.session.add(user)
@@ -47,8 +58,20 @@ Fundoo_Notes Team''')
         db.session.close()
         return {"message": "User registered successfully", "status": 201, "data": user.to_json, 'token': token}, 201
 
+
+    @api_handler()
     def delete(self, id):
-        """Delete a user."""
+        """Delete a user.
+        
+        Description:
+        This endpoint deletes a user from the database based on the provided user ID.
+
+        Parameter:
+        id (int): The ID of the user to be deleted.
+
+        Return:
+        dict: A dictionary containing a success message or a user not found message with HTTP status code 200 or 404, respectively.
+        """
         user = User.query.filter_by(id=id).first()
         if user:
             db.session.delete(user)
@@ -58,8 +81,19 @@ Fundoo_Notes Team''')
         return jsonify({"message": "User not found"})
 
     @api.doc(params={'token': "Give token"})
+    @api_handler()
     def get(self):
-        """Verify user."""
+        """Verify user.
+        
+        Description:
+        This endpoint verifies a user based on the provided verification token.
+
+        Parameter:
+        token (str): The verification token sent to the user's email.
+
+        Return:
+        dict: A dictionary containing a success message, or a user not found message with HTTP status code 200 or 404, respectively.
+        """
         token = request.args.get('token')
         if not token:
             return {'message': 'Token not found', 'status': 404}, 404
@@ -74,10 +108,21 @@ Fundoo_Notes Team''')
 @api.route('/login')
 class LoginAPI(Resource):
     """Resource for user login."""
-
+    
     @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
+    @api_handler()
     def post(self):
-        """Authenticate user."""
+        """Authenticate user.
+        
+        Description:
+        This endpoint authenticates a user based on the provided username and password.
+
+        Parameter:
+        None
+        
+        Return:
+        dict: A dictionary containing a success message and an authentication token with HTTP status code 200, or an invalid credentials message with HTTP status code 401.
+        """
         data = request.get_json()
         user = User.query.filter_by(username=data['username']).first()
         if user and user.verify_password(data['password']):

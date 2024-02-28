@@ -8,6 +8,10 @@ from . import mail
 import redis
 import psycopg2
 import sqlalchemy
+import re
+from log import set_logger
+
+logger = set_logger()
 
 def api_handler(body = None, query = None):
     def custom_validator(function):
@@ -19,13 +23,17 @@ def api_handler(body = None, query = None):
                     pass
                 return function(*args, **kwargs)
             except sqlalchemy.exc.IntegrityError as e:
+                logger.error(e)
                 return {"message": "Data already exist","status": 400,"data":{}},400
             except psycopg2.errors.UniqueViolation as e:
+                logger.error(e)
                 print(str(e))
                 return {"message": "Data already exist","status": 400,"data":{}},400
             except ValidationError as e:
+                logger.error(e)
                 return {"message": json.loads(e.json()),"status": 400,"data":{}},400
             except Exception as e:
+                logger.error(e)
                 return {"message": str(e),"status": 400,"data":{}},400
         wrapper.__name__ = function.__name__
         return wrapper
