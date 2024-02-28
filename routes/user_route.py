@@ -4,7 +4,6 @@ from app.models import User
 from schemas.user_schema import UserSchema
 from app.utils import api_handler
 from flask_restx import Api, Resource, fields
-# from app.utils import send_mail
 import jwt
 from settings import settings
 from app.tasks import celery_send_email
@@ -14,24 +13,24 @@ api = Api(app=app,
         version='1.0', 
         title='User API', 
         description='A simple User API', 
-        prefix = '/api/v1',
-        doc = '/docs')
+        prefix='/api/v1',
+        doc='/docs')
 
 
 @api.route('/register', '/verify')
 class UserAPI(Resource):
+    """Resource for user registration and verification."""
 
-    @api.expect(api.model('register', {'username': fields.String(), 'email': fields.String(), 'password': fields.String(),'location': fields.String()}))
+    @api.expect(api.model('register', {'username': fields.String(), 'email': fields.String(), 'password': fields.String(), 'location': fields.String()}))
     @api_handler(body=UserSchema)
     def post(self):
+        """Register a new user."""
         data = request.get_json()
         user = User(**data)
         db.session.add(user)
         db.session.commit()
         token = jwt.encode({"user_id": user.id}, settings.jwt_key, algorithm=settings.jwt_algo)
-        # send_mail(user.username,user.email,token)
-        celery_send_email.delay(user.username,user.email,token,"Welcome to Fundoo Notes! Verify Your Email to Get Started",f'''
-
+        celery_send_email.delay(user.username, user.email, token, "Welcome to Fundoo Notes! Verify Your Email to Get Started", f'''
 Dear {user},
 
 Welcome to Fundoo_Notes! We're thrilled to have you as part of our community. To get started, please verify your email address by entering the following verification token within the website:
@@ -46,9 +45,10 @@ Best regards,
 Fundoo_Notes Team''')
         db.session.refresh(user)
         db.session.close()
-        return {"message": "User registered successfully","status":201,"data":user.to_json,'token': token}, 201
+        return {"message": "User registered successfully", "status": 201, "data": user.to_json, 'token': token}, 201
 
     def delete(self, id):
+        """Delete a user."""
         user = User.query.filter_by(id=id).first()
         if user:
             db.session.delete(user)
@@ -57,8 +57,9 @@ Fundoo_Notes Team''')
             return jsonify({"message": "User deleted successfully"})
         return jsonify({"message": "User not found"})
 
-    @api.doc(params = {'token': "Give token"})
+    @api.doc(params={'token': "Give token"})
     def get(self):
+        """Verify user."""
         token = request.args.get('token')
         if not token:
             return {'message': 'Token not found', 'status': 404}, 404
@@ -72,11 +73,13 @@ Fundoo_Notes Team''')
 
 @api.route('/login')
 class LoginAPI(Resource):
+    """Resource for user login."""
 
     @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
     def post(self):
+        """Authenticate user."""
         data = request.get_json()
         user = User.query.filter_by(username=data['username']).first()
         if user and user.verify_password(data['password']):
-            return {"message":"Login successful","token": user.generate_token(aud = "login",exp = 60),"status": 200}, 200
+            return {"message": "Login successful", "token": user.generate_token(aud="login", exp=60), "status": 200}, 200
         return {"message": "Invalid credentials", "status": 401}, 401
