@@ -6,8 +6,12 @@ from app.utils import api_handler, RedisManager
 from schemas.notes_schema import NotesSchema
 from app.middleware import auth_user
 from sqlalchemy import text
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = create_app()
+
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 
 api = Api(app=app,
           version='1.0',
@@ -26,12 +30,14 @@ api = Api(app=app,
           prefix='/api/v1')
 
 @api.route('/labels')
+
 class LabelsApi(Resource):
     """Resource for managing labels."""
 
     method_decorators = [auth_user]
 
     @api_handler()
+    @limiter.limit("5 per minute")
     def get(self, *args, **kwargs):
         """Retrieve all labels for the authenticated user.
 
@@ -55,6 +61,7 @@ class LabelsApi(Resource):
 
     @api.expect(api.model('createLabel', {"name": fields.String()}))
     @api_handler()
+    @limiter.limit("5 per minute")
     def post(self, *args, **kwargs):
         """Create a new label.
 
@@ -77,6 +84,7 @@ class LabelsApi(Resource):
 
     @api.doc(params={'label_id': "Label Id"})
     @api_handler()
+    @limiter.limit("5 per minute")
     def delete(self, *args, **kwargs):
         """Delete a label.
 
@@ -103,6 +111,7 @@ class LabelsApi(Resource):
 
     @api.expect(api.model('updateLabel', {"id": fields.Integer(), "name": fields.String(), "user_id": fields.Integer()}))
     @api_handler()
+    @limiter.limit("5 per minute")
     def put(self, *args, **kwargs):
         """Update a label.
 

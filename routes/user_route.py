@@ -8,7 +8,13 @@ import jwt
 from settings import settings
 from app.tasks import celery_send_email
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 app = create_app()
+
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
+
 api = Api(app=app, 
         version='1.0', 
         title='User API', 
@@ -23,6 +29,7 @@ class UserAPI(Resource):
     
     @api.expect(api.model('register', {'username': fields.String(), 'email': fields.String(), 'password': fields.String(), 'location': fields.String()}))
     @api_handler(body=UserSchema)
+    @limiter.limit("5 per minute")
     def post(self):
         """Register a new user.
         
@@ -60,6 +67,7 @@ Fundoo_Notes Team''')
 
 
     @api_handler()
+    @limiter.limit("5 per minute")
     def delete(self, id):
         """Delete a user.
         
@@ -82,6 +90,7 @@ Fundoo_Notes Team''')
 
     @api.doc(params={'token': "Give token"})
     @api_handler()
+    @limiter.limit("5 per minute")
     def get(self):
         """Verify user.
         
@@ -111,6 +120,7 @@ class LoginAPI(Resource):
     
     @api.expect(api.model('login', {'username': fields.String(), 'password': fields.String()}))
     @api_handler()
+    @limiter.limit("5 per minute")
     def post(self):
         """Authenticate user.
         

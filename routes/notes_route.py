@@ -8,7 +8,12 @@ from redbeat import RedBeatSchedulerEntry as Task
 from celery.schedules import crontab
 from app.middleware import auth_user
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 app = create_app()
+
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 
 api = Api(app=app, version='1.0', title='Notes API', description='Notes API', security='apikey', authorizations={
     'apikey': {
@@ -26,6 +31,7 @@ class NotesApi(Resource):
     method_decorators = [auth_user]
 
     @api_handler()
+    @limiter.limit("5 per minute")
     def get(self, *args, **kwargs):
         """Retrieve notes.
 
@@ -57,6 +63,7 @@ class NotesApi(Resource):
 
     @api.expect(api.model('Addnotes', {"title": fields.String(), "description": fields.String(), "color": fields.String(), "reminder": fields.String()}))
     @api_handler(body=NotesSchema)
+    @limiter.limit("5 per minute")
     def post(self):
         """Add a new note.
 
@@ -100,6 +107,8 @@ class NotesApi(Resource):
         db.session.close()
         return {"message": "Notes added successfully", "status": 201, "data": notes.to_json()}, 201
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def delete(self, *args, **kwargs):
         """Delete a note.
 
@@ -124,6 +133,7 @@ class NotesApi(Resource):
 
     @api.expect(api.model('Updatenotes', {"id": fields.Integer(), "title": fields.String(), "description": fields.String(), "color": fields.String()}))
     @api_handler()
+    @limiter.limit("5 per minute")
     def put(self, *args, **kwargs):
         """Update a note.
 
@@ -150,6 +160,8 @@ class NoteArchived(Resource):
 
     method_decorators = [auth_user]
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def put(self, *args, **kwargs):
         """Archive a note.
 
@@ -170,6 +182,8 @@ class NoteArchived(Resource):
         RedisManager.save(f'user_{note.user_id}', f'note_{note.id}', json.dumps(note.to_json()))
         return {"message": "Note archived successfully", "status": 200, "data": note.to_json()}, 200
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def get(self, *args, **kwargs):
         """Retrieve archived notes.
 
@@ -192,6 +206,8 @@ class NoteTrash(Resource):
 
     method_decorators = [auth_user]
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def put(self, *args, **kwargs):
         """Trash a note.
 
@@ -212,6 +228,8 @@ class NoteTrash(Resource):
         RedisManager.save(f'user_{note.user_id}', f'note_{note.id}', json.dumps(note.to_json()))
         return {"message": "Note trashed successfully", "status": 200, "data": note.to_json()}, 200
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def get(self, *args, **kwargs):
         """Retrieve trashed notes.
 
@@ -234,6 +252,8 @@ class NoteCollaborator(Resource):
 
     method_decorators = [auth_user]
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def post(self):
         """Add a collaborator to a note.
 
@@ -261,6 +281,8 @@ class NoteCollaborator(Resource):
         except Exception as e:
             return {"message": str(e), "status": 500}, 500
 
+    @api_handler()
+    @limiter.limit("5 per minute")
     def delete(self, *args, **kwargs):
         """Remove a collaborator from a note.
 
